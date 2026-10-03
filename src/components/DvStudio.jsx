@@ -1,56 +1,52 @@
 import React, { useState } from 'react';
 import { 
   Cpu, GitBranch, Terminal, Shield, CheckCircle2, ChevronRight, 
-  Layers, Code2, FolderGit2, Play, ExternalLink, Sparkles, BookOpen
+  Layers, Code2, FolderGit2, Play, ExternalLink, Sparkles, BookOpen,
+  Link, Check, RotateCcw
 } from 'lucide-react';
-import { DV_ROADMAP_STAGES } from '../data/careerData';
+import { DV_ROADMAP_STAGES, INITIAL_DV_PROJECTS } from '../data/careerData';
 
-export function DvStudio() {
-  const [selectedStageIdx, setSelectedStageIdx] = useState(0);
+export function DvStudio({ state, updateState }) {
+  const [selectedStageIdx, setSelectedStageIdx] = useState(state?.active_dv_stage || 0);
   const selectedStage = DV_ROADMAP_STAGES[selectedStageIdx];
 
-  const projectLadder = [
-    {
-      level: "Beginner",
-      title: "Self-Checking 4-bit ALU & Status Register",
-      tech: "Verilog HDL + Basic Testbench",
-      timing: "Sem 2-1 (Nov 2026)",
-      deliverables: ["Synthesizable RTL ALU", "Automated self-checking testbench", "Edge case assertion of overflow flag"],
-      completed: true
-    },
-    {
-      level: "Intermediate 1",
-      title: "Dual-Clock Asynchronous FIFO with Gray Pointers",
-      tech: "Verilog / SystemVerilog + CDC Synchronizers",
-      timing: "Sem 2-2 (May 2027)",
-      deliverables: ["2-FF Gray code pointer synchronization", "Full/Empty condition boundary checks", "Multi-frequency clock domain simulation"],
-      completed: false
-    },
-    {
-      level: "Intermediate 2",
-      title: "Configurable Full-Duplex UART with Constrained Random Testbench",
-      tech: "SystemVerilog OOP + Mailboxes + Scoreboard",
-      timing: "Sem 3-1 (Oct 2027)",
-      deliverables: ["Layered testbench (Driver, Monitor, Scoreboard)", "Parity & Framing error injection", "Randomized baud rate generator"],
-      completed: false
-    },
-    {
-      level: "Advanced",
-      title: "ARM AMBA APB Master & Slave Verification IP (VIP)",
-      tech: "SystemVerilog + SVA Assertions + Functional Coverage",
-      timing: "Sem 3-2 (Post-GATE 2028: Apr 2028)",
-      deliverables: ["Full APB state machine protocol checker", "Concurrent SVA assertions for PSLVERR & PENABLE timing", "100% Functional & Code Coverage Report"],
-      completed: false
-    },
-    {
-      level: "Capstone",
-      title: "Full UVM Verification Environment for AXI-to-APB Bridge",
-      tech: "UVM 1.2 + Virtual Sequencers + TLM Scoreboard + CI Regressions",
-      timing: "Sem 4-1 (Nov 2028)",
-      deliverables: ["UVM Agent hierarchy (AXI Master agent + APB Slave agent)", "Automated Makefile regression scripts", "GitHub portfolio dossier with waveforms & bug detection logs"],
-      completed: false
-    }
-  ];
+  const dvProjects = state?.dv_projects && state.dv_projects.length > 0 ? state.dv_projects : INITIAL_DV_PROJECTS;
+
+  const toggleProjectStatus = (projId) => {
+    const updated = dvProjects.map(p => {
+      if (p.id === projId) {
+        const nextStatus = p.status === 'completed' ? 'not_started' : p.status === 'in_progress' ? 'completed' : 'in_progress';
+        return { ...p, status: nextStatus, completed: nextStatus === 'completed' };
+      }
+      return p;
+    });
+    updateState({
+      ...state,
+      dv_projects: updated
+    });
+  };
+
+  const updateProjectRepo = (projId, url) => {
+    const updated = dvProjects.map(p => {
+      if (p.id === projId) {
+        return { ...p, repo_url: url };
+      }
+      return p;
+    });
+    updateState({
+      ...state,
+      dv_projects: updated
+    });
+  };
+
+  const setActiveStage = (stageIdx) => {
+    updateState({
+      ...state,
+      active_dv_stage: stageIdx
+    });
+  };
+
+  const completedProjectsCount = dvProjects.filter(p => p.status === 'completed').length;
 
   return (
     <div className="space-y-6">
@@ -201,17 +197,19 @@ export function DvStudio() {
             </p>
           </div>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20 font-semibold self-start sm:self-auto">
-            GitHub Portfolio Target
+            {completedProjectsCount} / {dvProjects.length} Completed
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          {projectLadder.map((proj, idx) => (
+          {dvProjects.map((proj, idx) => (
             <div 
-              key={idx}
+              key={proj.id || idx}
               className={`p-4 rounded-xl border flex flex-col justify-between space-y-3 ${
-                proj.completed 
+                proj.status === 'completed' 
                   ? 'bg-emerald-950/20 border-emerald-500/30' 
+                  : proj.status === 'in_progress'
+                  ? 'bg-amber-950/20 border-amber-500/30'
                   : 'bg-slate-950/70 border-slate-800'
               }`}
             >
@@ -220,11 +218,19 @@ export function DvStudio() {
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
                     Tier {idx + 1} • {proj.level}
                   </span>
-                  {proj.completed && (
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Done
-                    </span>
-                  )}
+                  <button
+                    onClick={() => toggleProjectStatus(proj.id)}
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded transition-all ${
+                      proj.status === 'completed'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+                        : proj.status === 'in_progress'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30'
+                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                    title="Click to toggle status: Not Started -> In Progress -> Completed"
+                  >
+                    {proj.status === 'completed' ? '✓ Mastered' : proj.status === 'in_progress' ? '⏳ Building' : '○ Not Started'}
+                  </button>
                 </div>
 
                 <h4 className="text-xs font-bold text-white leading-snug">{proj.title}</h4>
@@ -238,19 +244,49 @@ export function DvStudio() {
                     </div>
                   ))}
                 </div>
+
+                {/* GitHub Repo URL Input */}
+                <div className="pt-2">
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
+                    <Link className="w-3 h-3 text-indigo-400" />
+                    <span>GitHub Repository</span>
+                  </div>
+                  <input
+                    type="url"
+                    placeholder="https://github.com/..."
+                    value={proj.repo_url || ''}
+                    onChange={(e) => updateProjectRepo(proj.id, e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[10px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 border-t border-slate-800/60">
-                <button 
-                  className={`w-full py-1.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                    proj.completed 
-                      ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20' 
-                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
-                  }`}
-                >
-                  <Terminal className="w-3 h-3" />
-                  {proj.completed ? 'View Specs & Code' : 'Locked (Pending Track)'}
-                </button>
+                {proj.repo_url ? (
+                  <a
+                    href={proj.repo_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-1.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 bg-indigo-600/30 hover:bg-indigo-600 text-white transition-all"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View on GitHub
+                  </a>
+                ) : (
+                  <button 
+                    onClick={() => toggleProjectStatus(proj.id)}
+                    className={`w-full py-1.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                      proj.status === 'completed' 
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20' 
+                        : proj.status === 'in_progress'
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20'
+                        : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <Terminal className="w-3 h-3" />
+                    {proj.status === 'completed' ? 'Status: Complete' : proj.status === 'in_progress' ? 'Status: In Progress' : 'Start Project'}
+                  </button>
+                )}
               </div>
             </div>
           ))}

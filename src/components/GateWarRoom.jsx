@@ -2,15 +2,21 @@ import React, { useState } from 'react';
 import { 
   BookOpen, Target, AlertCircle, Award, CheckCircle2, ChevronDown, 
   ChevronRight, Plus, Filter, Calculator, Sparkles, AlertTriangle, 
-  Calendar, RotateCcw, Clock, Layers
+  Calendar, RotateCcw, Clock, Layers, Zap, Cpu, FileText
 } from 'lucide-react';
-import { GATE_SYLLABUS, TRIPLE_OVERLAP_MATRIX, INITIAL_ERROR_BOOK } from '../data/careerData';
+import { GATE_SYLLABUS, TRIPLE_OVERLAP_MATRIX, INITIAL_ERROR_BOOK, GATE_FORMULA_VAULT } from '../data/careerData';
 
 export function GateWarRoom({ state, updateState }) {
-  const [activeSubTab, setActiveSubTab] = useState('syllabus'); // syllabus | overlap | error_book | pyq_system
+  const [activeSubTab, setActiveSubTab] = useState('syllabus'); // syllabus | formula_vault | overlap | error_book | pyq_system
   const [expandedSection, setExpandedSection] = useState('sec_math');
-  const [errorBook, setErrorBook] = useState(INITIAL_ERROR_BOOK);
+  const [selectedFormulaSubject, setSelectedFormulaSubject] = useState('f_digital');
   const [showAddErrorModal, setShowAddErrorModal] = useState(false);
+
+  const completedIds = state.syllabus_completed_ids || [];
+  const inProgressIds = state.syllabus_in_progress_ids || [];
+  const topicPyqs = state.topic_pyqs || {};
+  const errorBook = state.error_book && state.error_book.length > 0 ? state.error_book : INITIAL_ERROR_BOOK;
+
   const [newError, setNewError] = useState({
     subject: "Digital Circuits",
     topic: "",
@@ -23,6 +29,47 @@ export function GateWarRoom({ state, updateState }) {
     root_cause: "",
     corrective_rule: ""
   });
+
+  const toggleTopicStatus = (topicId) => {
+    let newCompleted = [...completedIds];
+    let newInProgress = [...inProgressIds];
+
+    if (newCompleted.includes(topicId)) {
+      newCompleted = newCompleted.filter(id => id !== topicId);
+    } else if (newInProgress.includes(topicId)) {
+      newInProgress = newInProgress.filter(id => id !== topicId);
+      newCompleted.push(topicId);
+    } else {
+      newInProgress.push(topicId);
+    }
+
+    updateState({
+      ...state,
+      syllabus_completed_ids: newCompleted,
+      syllabus_in_progress_ids: newInProgress
+    });
+  };
+
+  const adjustTopicPyqs = (topicId, delta) => {
+    const current = topicPyqs[topicId] || 0;
+    const nextVal = Math.max(0, current + delta);
+    const updatedPyqs = {
+      ...topicPyqs,
+      [topicId]: nextVal
+    };
+    
+    const currentTotal = state.streaks.total_pyqs_solved || 0;
+    const newTotal = Math.max(0, currentTotal + delta);
+
+    updateState({
+      ...state,
+      topic_pyqs: updatedPyqs,
+      streaks: {
+        ...state.streaks,
+        total_pyqs_solved: newTotal
+      }
+    });
+  };
 
   const handleAddError = (e) => {
     e.preventDefault();
@@ -38,7 +85,10 @@ export function GateWarRoom({ state, updateState }) {
       status: "pending_review"
     };
 
-    setErrorBook([entry, ...errorBook]);
+    updateState({
+      ...state,
+      error_book: [entry, ...errorBook]
+    });
     setShowAddErrorModal(false);
     setNewError({
       subject: "Digital Circuits",
@@ -55,7 +105,7 @@ export function GateWarRoom({ state, updateState }) {
   };
 
   const advanceErrorInterval = (errorId) => {
-    setErrorBook(prev => prev.map(item => {
+    const updated = errorBook.map(item => {
       if (item.id === errorId) {
         const nextIdx = item.current_interval_idx + 1;
         if (nextIdx >= item.spaced_interval_days.length) {
@@ -71,7 +121,12 @@ export function GateWarRoom({ state, updateState }) {
         };
       }
       return item;
-    }));
+    });
+
+    updateState({
+      ...state,
+      error_book: updated
+    });
   };
 
   return (
@@ -96,7 +151,7 @@ export function GateWarRoom({ state, updateState }) {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto">
             <button
               onClick={() => setActiveSubTab('syllabus')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -104,6 +159,15 @@ export function GateWarRoom({ state, updateState }) {
               }`}
             >
               Syllabus Tree
+            </button>
+            <button
+              onClick={() => setActiveSubTab('formula_vault')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeSubTab === 'formula_vault' ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Formula Vault
             </button>
             <button
               onClick={() => setActiveSubTab('overlap')}
@@ -133,13 +197,13 @@ export function GateWarRoom({ state, updateState }) {
         </div>
       </div>
 
-      {/* SUBTAB 1: SYLLABUS TREE */}
+      {/* SUBTAB 1: DYNAMIC SYLLABUS TREE */}
       {activeSubTab === 'syllabus' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5">
-              <div className="text-xs text-slate-400">Total Core Sections</div>
-              <div className="text-lg font-bold text-white font-mono">8 Core + Math + Aptitude</div>
+              <div className="text-xs text-slate-400">Total Topics Mastered</div>
+              <div className="text-lg font-bold text-white font-mono">{completedIds.length} Mastered / {inProgressIds.length} Active</div>
             </div>
             <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5">
               <div className="text-xs text-slate-400">Active High-ROI Section</div>
@@ -154,11 +218,12 @@ export function GateWarRoom({ state, updateState }) {
           <div className="space-y-3">
             {GATE_SYLLABUS.map((sec) => {
               const isExpanded = expandedSection === sec.id;
-              const completedTopics = sec.topics.filter(t => t.status === 'completed').length;
-              const inProgressTopics = sec.topics.filter(t => t.status === 'in_progress').length;
+              const completedTopics = sec.topics.filter(t => completedIds.includes(t.id)).length;
+              const inProgressTopics = sec.topics.filter(t => inProgressIds.includes(t.id)).length;
               const totalTopics = sec.topics.length;
-              const totalPyqsSolved = sec.topics.reduce((acc, t) => acc + t.pyqs_solved, 0);
+              const totalPyqsSolved = sec.topics.reduce((acc, t) => acc + (topicPyqs[t.id] || 0), 0);
               const totalPyqsTarget = sec.topics.reduce((acc, t) => acc + t.pyqs_target, 0);
+              const secPercentage = totalPyqsTarget > 0 ? Math.round((totalPyqsSolved / totalPyqsTarget) * 100) : 0;
 
               return (
                 <div key={sec.id} className="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden transition-all">
@@ -192,50 +257,153 @@ export function GateWarRoom({ state, updateState }) {
                       <div className="w-32 bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
                         <div 
                           className="h-full bg-amber-500 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.round((totalPyqsSolved / (totalPyqsTarget || 1)) * 100)}%` }}
+                          style={{ width: `${Math.min(100, secPercentage)}%` }}
                         ></div>
                       </div>
                       <span className="text-xs font-mono font-bold text-slate-300 w-10 text-right">
-                        {Math.round((totalPyqsSolved / (totalPyqsTarget || 1)) * 100)}%
+                        {secPercentage}%
                       </span>
                     </div>
                   </div>
 
                   {isExpanded && (
                     <div className="border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-2.5">
-                      {sec.topics.map((top) => (
-                        <div key={top.id} className="p-3 rounded-lg bg-slate-900/80 border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${
-                                top.status === 'completed' ? 'bg-emerald-400' :
-                                top.status === 'in_progress' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'
-                              }`}></span>
-                              <span className="text-xs font-semibold text-white">{top.name}</span>
-                            </div>
-                            <div className="text-[11px] text-slate-400 font-mono">
-                              PYQs: <span className="text-amber-400 font-bold">{top.pyqs_solved}</span> / {top.pyqs_target} • 
-                              Mastery Index: <span className="text-indigo-400 font-bold">{top.mastery}%</span>
-                            </div>
-                          </div>
+                      {sec.topics.map((top) => {
+                        const status = completedIds.includes(top.id) ? 'completed' : inProgressIds.includes(top.id) ? 'in_progress' : 'not_started';
+                        const solved = topicPyqs[top.id] || 0;
+                        const mastery = Math.min(100, Math.round((solved / (top.pyqs_target || 1)) * 100));
 
-                          <div className="flex items-center gap-2 self-end sm:self-center">
-                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold uppercase ${
-                              top.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              top.status === 'in_progress' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                              'bg-slate-800 text-slate-400'
-                            }`}>
-                              {top.status.replace('_', ' ')}
-                            </span>
+                        return (
+                          <div key={top.id} className="p-3 rounded-lg bg-slate-900/80 border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${
+                                  status === 'completed' ? 'bg-emerald-400' :
+                                  status === 'in_progress' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'
+                                }`}></span>
+                                <span className="text-xs font-semibold text-white">{top.name}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-mono">
+                                PYQs: <span className="text-amber-400 font-bold">{solved}</span> / {top.pyqs_target} • 
+                                Mastery Index: <span className="text-indigo-400 font-bold">{mastery}%</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end sm:self-center">
+                              {/* PYQ Controls */}
+                              <div className="flex items-center gap-1 bg-slate-950 px-1.5 py-0.5 rounded-lg border border-slate-800">
+                                <button
+                                  onClick={() => adjustTopicPyqs(top.id, -1)}
+                                  className="w-5 h-5 rounded hover:bg-slate-800 text-slate-400 flex items-center justify-center text-xs"
+                                  title="Subtract 1 PYQ"
+                                >
+                                  -
+                                </button>
+                                <span className="text-[10px] font-mono font-bold text-slate-300 px-1">{solved}</span>
+                                <button
+                                  onClick={() => adjustTopicPyqs(top.id, 1)}
+                                  className="w-5 h-5 rounded hover:bg-slate-800 text-amber-400 flex items-center justify-center text-xs font-bold"
+                                  title="Add 1 PYQ"
+                                >
+                                  +1
+                                </button>
+                                <button
+                                  onClick={() => adjustTopicPyqs(top.id, 5)}
+                                  className="px-1.5 h-5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 flex items-center justify-center text-[10px] font-bold"
+                                  title="Add 5 PYQs"
+                                >
+                                  +5
+                                </button>
+                              </div>
+
+                              {/* Status Toggle Button */}
+                              <button
+                                onClick={() => toggleTopicStatus(top.id)}
+                                className={`text-[10px] font-mono px-2.5 py-1 rounded-lg font-bold transition-all ${
+                                  status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' :
+                                  status === 'in_progress' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30' :
+                                  'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                                }`}
+                                title="Click to cycle: Not Started -> In Progress -> Completed"
+                              >
+                                {status === 'completed' ? '✓ Mastered' : status === 'in_progress' ? '⏳ In Progress' : '○ Not Started'}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* SUBTAB 2: POCKET FORMULA VAULT (HIGH-YIELD REVISION FOR MOBILE) */}
+      {activeSubTab === 'formula_vault' && (
+        <div className="space-y-4">
+          <div className="bg-amber-950/20 border border-amber-500/30 rounded-xl p-4 text-xs text-slate-300 leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <strong className="text-amber-400 block font-bold text-sm mb-1">
+                Pocket Formula &amp; Trap Vault
+              </strong>
+              Review high-yield formulas and classic exam traps directly from your phone on the go.
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {GATE_FORMULA_VAULT.map(vault => (
+                <button
+                  key={vault.id}
+                  onClick={() => setSelectedFormulaSubject(vault.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedFormulaSubject === vault.id
+                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  {vault.subject}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cards for active subject */}
+          {GATE_FORMULA_VAULT.filter(v => v.id === selectedFormulaSubject).map(vault => (
+            <div key={vault.id} className="space-y-3">
+              {vault.cards.map((card, idx) => (
+                <div key={idx} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-amber-400" />
+                      {card.title}
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                      {vault.subject}
+                    </span>
+                  </div>
+
+                  {/* Highlight Formula Box */}
+                  <div className="p-3 rounded-lg bg-slate-950 border border-amber-500/30 font-mono text-amber-300 text-xs md:text-sm font-bold tracking-wide">
+                    {card.key_formula}
+                  </div>
+
+                  {/* Core Explanation */}
+                  <div className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                    {card.explanation}
+                  </div>
+
+                  {/* Trap Alert */}
+                  {card.traps && (
+                    <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      <span>{card.traps}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       )}
 

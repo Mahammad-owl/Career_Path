@@ -18,21 +18,28 @@ export default function App() {
 
   const [state, setState] = useState(() => {
     try {
-      // 1. Check v2 state
       const savedV2 = localStorage.getItem('riyaz_career_os_v2');
       if (savedV2) {
-        return JSON.parse(savedV2);
-      }
-
-      // 2. Check old v1 state (clean reset if it had the mock 12-day streak)
-      const savedV1 = localStorage.getItem('riyaz_career_os_v1');
-      if (savedV1) {
-        const parsed = JSON.parse(savedV1);
-        if (parsed?.streaks?.gate_days === 12) {
-          localStorage.removeItem('riyaz_career_os_v1');
-          return INITIAL_USER_STATE;
-        }
-        return parsed;
+        const parsed = JSON.parse(savedV2);
+        return {
+          ...INITIAL_USER_STATE,
+          ...parsed,
+          today: {
+            ...INITIAL_USER_STATE.today,
+            ...(parsed.today || {})
+          },
+          streaks: {
+            ...INITIAL_USER_STATE.streaks,
+            ...(parsed.streaks || {})
+          },
+          syllabus_completed_ids: parsed.syllabus_completed_ids || [],
+          syllabus_in_progress_ids: parsed.syllabus_in_progress_ids || [],
+          topic_pyqs: parsed.topic_pyqs || {},
+          error_book: parsed.error_book || [],
+          dv_projects: parsed.dv_projects || [],
+          japanese_mastered_ids: parsed.japanese_mastered_ids || [],
+          daily_notes: parsed.daily_notes || ""
+        };
       }
     } catch (e) {
       console.error("Failed to load saved state", e);
@@ -141,7 +148,10 @@ export default function App() {
           />
         )}
         {activeTab === 'dv' && (
-          <DvStudio />
+          <DvStudio 
+            state={state} 
+            updateState={updateState} 
+          />
         )}
         {activeTab === 'languages' && (
           <LanguageWing 

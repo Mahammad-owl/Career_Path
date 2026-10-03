@@ -40,7 +40,13 @@ export const INITIAL_USER_STATE = {
     japanese_days: 0,
     total_hours_studied: 0,
     total_pyqs_solved: 0
-  }
+  },
+  syllabus_completed_ids: [],
+  syllabus_in_progress_ids: [],
+  topic_pyqs: {},
+  error_book: [],
+  dv_projects_progress: {},
+  daily_notes: ""
 };
 
 export const OPERATING_MODALITIES = {
@@ -203,7 +209,7 @@ export const GATE_SYLLABUS = [
     weightage: "~13 Marks",
     priority: "High",
     topics: [
-      { id: "m1", name: "Linear Algebra (Eigenvalues, System of Equations, Rank, Cayley-Hamilton)", status: "in_progress", pyqs_solved: 34, pyqs_target: 70, mastery: 65 },
+      { id: "m1", name: "Linear Algebra (Eigenvalues, System of Equations, Rank, Cayley-Hamilton)", status: "not_started", pyqs_solved: 0, pyqs_target: 70, mastery: 0 },
       { id: "m2", name: "Calculus (Mean Value Theorems, Maxima/Minima, Multiple Integrals, Vector Calculus)", status: "not_started", pyqs_solved: 0, pyqs_target: 85, mastery: 0 },
       { id: "m3", name: "Differential Equations (First order, Higher order linear, Cauchy-Euler, Laplace transform method)", status: "not_started", pyqs_solved: 0, pyqs_target: 60, mastery: 0 },
       { id: "m4", name: "Complex Analysis (Analytic functions, Cauchy-Riemann equations, Residue theorem, Taylor/Laurent)", status: "not_started", pyqs_solved: 0, pyqs_target: 45, mastery: 0 },
@@ -216,9 +222,9 @@ export const GATE_SYLLABUS = [
     weightage: "~9-11 Marks",
     priority: "High (Triple Overlap ⭐⭐⭐)",
     topics: [
-      { id: "d1", name: "Number Systems & Boolean Algebra (K-Maps, Quine-McCluskey, Logic Minimization)", status: "completed", pyqs_solved: 50, pyqs_target: 50, mastery: 95 },
-      { id: "d2", name: "Combinational Circuits (Adders, Subtractors, MUX, Demux, Encoders, Decoders, Hazards)", status: "in_progress", pyqs_solved: 38, pyqs_target: 65, mastery: 75 },
-      { id: "d3", name: "Sequential Circuits (Latches, Flip-Flops, Setup/Hold Times, Ripple & Synchronous Counters, Registers)", status: "in_progress", pyqs_solved: 25, pyqs_target: 80, mastery: 60 },
+      { id: "d1", name: "Number Systems & Boolean Algebra (K-Maps, Quine-McCluskey, Logic Minimization)", status: "not_started", pyqs_solved: 0, pyqs_target: 50, mastery: 0 },
+      { id: "d2", name: "Combinational Circuits (Adders, Subtractors, MUX, Demux, Encoders, Decoders, Hazards)", status: "not_started", pyqs_solved: 0, pyqs_target: 65, mastery: 0 },
+      { id: "d3", name: "Sequential Circuits (Latches, Flip-Flops, Setup/Hold Times, Ripple & Synchronous Counters, Registers)", status: "not_started", pyqs_solved: 0, pyqs_target: 80, mastery: 0 },
       { id: "d4", name: "Finite State Machines & Asynchronous Circuits (State Reduction, State Assignment)", status: "not_started", pyqs_solved: 0, pyqs_target: 40, mastery: 0 },
       { id: "d5", name: "Data Converters & Memories (ADC, DAC, ROM, SRAM, DRAM, Flash)", status: "not_started", pyqs_solved: 0, pyqs_target: 35, mastery: 0 },
       { id: "d6", name: "Microprocessor Basics (8085 architecture, memory interfacing, instruction cycles)", status: "not_started", pyqs_solved: 0, pyqs_target: 30, mastery: 0 }
@@ -230,7 +236,7 @@ export const GATE_SYLLABUS = [
     weightage: "~8-10 Marks",
     priority: "High (College Sem 2-1 Overlap ⭐⭐)",
     topics: [
-      { id: "c1", name: "System Modeling & Transfer Functions (Block Diagram Reduction, Mason's Gain Formula)", status: "in_progress", pyqs_solved: 22, pyqs_target: 45, mastery: 70 },
+      { id: "c1", name: "System Modeling & Transfer Functions (Block Diagram Reduction, Mason's Gain Formula)", status: "not_started", pyqs_solved: 0, pyqs_target: 45, mastery: 0 },
       { id: "c2", name: "Time Domain Analysis (Step/Ramp response, Transient specifications, Steady-state errors)", status: "not_started", pyqs_solved: 0, pyqs_target: 60, mastery: 0 },
       { id: "c3", name: "Stability & Routh-Hurwitz Criterion (Special cases, Auxiliary equations)", status: "not_started", pyqs_solved: 0, pyqs_target: 40, mastery: 0 },
       { id: "c4", name: "Root Locus Technique (Asymptotes, Centroid, Breakaway points, Angle of departure)", status: "not_started", pyqs_solved: 0, pyqs_target: 50, mastery: 0 },
@@ -315,7 +321,7 @@ export const GATE_SYLLABUS = [
     topics: [
       { id: "ga1", name: "Quantitative Aptitude (Ratio, Percentages, Time & Work, Algebra, Geometry)", status: "not_started", pyqs_solved: 0, pyqs_target: 60, mastery: 0 },
       { id: "ga2", name: "Analytical & Spatial Aptitude (Series, Syllogisms, Folding, Paper rotation)", status: "not_started", pyqs_solved: 0, pyqs_target: 40, mastery: 0 },
-      { id: "ga3", name: "Verbal Ability (Grammar, Vocabulary, Sentence completion, Reading comprehension)", status: "in_progress", pyqs_solved: 15, pyqs_target: 50, mastery: 40 }
+      { id: "ga3", name: "Verbal Ability (Grammar, Vocabulary, Sentence completion, Reading comprehension)", status: "not_started", pyqs_solved: 0, pyqs_target: 50, mastery: 0 }
     ]
   }
 ];
@@ -600,6 +606,159 @@ export const ENGLISH_VERBAL_PROMPTS = [
     prompt: "Explain the intuitive physical meaning of Gain Margin and Phase Margin on a Bode plot.",
     key_terms: ["gain crossover frequency", "phase crossover frequency", "closed-loop stability", "open-loop transfer function"],
     sample_answer_bullet: "Gain Margin represents how much additional open-loop gain can be tolerated before the system becomes unstable when the phase lag reaches 180 degrees. Phase Margin represents how much additional phase delay the system can tolerate at unity gain before oscillating. Both measure the safety buffer against instability."
+  }
+];
+
+export const INITIAL_DV_PROJECTS = [
+  {
+    id: "proj_1",
+    level: "Beginner",
+    title: "Self-Checking 4-bit ALU & Status Register",
+    tech: "Verilog HDL + Basic Testbench",
+    timing: "Sem 2-1 (Nov 2026)",
+    deliverables: ["Synthesizable RTL ALU", "Automated self-checking testbench", "Edge case assertion of overflow flag"],
+    status: "not_started",
+    repo_url: "",
+    notes: "Core building block of RTL architecture."
+  },
+  {
+    id: "proj_2",
+    level: "Intermediate 1",
+    title: "Dual-Clock Asynchronous FIFO with Gray Pointers",
+    tech: "Verilog / SystemVerilog + CDC Synchronizers",
+    timing: "Sem 2-2 (May 2027)",
+    deliverables: ["2-FF Gray code pointer synchronization", "Full/Empty condition boundary checks", "Multi-frequency clock domain simulation"],
+    status: "not_started",
+    repo_url: "",
+    notes: "Top interview topic: Clock Domain Crossing (CDC)."
+  },
+  {
+    id: "proj_3",
+    level: "Intermediate 2",
+    title: "Configurable Full-Duplex UART with Constrained Random Testbench",
+    tech: "SystemVerilog OOP + Mailboxes + Scoreboard",
+    timing: "Sem 3-1 (Oct 2027)",
+    deliverables: ["Layered testbench (Driver, Monitor, Scoreboard)", "Parity & Framing error injection", "Randomized baud rate generator"],
+    status: "not_started",
+    repo_url: "",
+    notes: "Transition from pure RTL to OOP Verification."
+  },
+  {
+    id: "proj_4",
+    level: "Advanced",
+    title: "ARM AMBA APB Master & Slave Verification IP (VIP)",
+    tech: "SystemVerilog + SVA Assertions + Functional Coverage",
+    timing: "Sem 3-2 (Post-GATE 2028: Apr 2028)",
+    deliverables: ["Full APB state machine protocol checker", "Concurrent SVA assertions for PSLVERR & PENABLE timing", "100% Functional & Code Coverage Report"],
+    status: "not_started",
+    repo_url: "",
+    notes: "Standard industry protocol; demonstrates SystemVerilog Assertions."
+  },
+  {
+    id: "proj_5",
+    level: "Capstone",
+    title: "Full UVM Verification Environment for AXI-to-APB Bridge",
+    tech: "UVM 1.2 + Virtual Sequencers + TLM Scoreboard + CI Regressions",
+    timing: "Sem 4-1 (Nov 2028)",
+    deliverables: ["UVM Agent hierarchy (AXI Master agent + APB Slave agent)", "Automated Makefile regression scripts", "GitHub portfolio dossier with waveforms & bug detection logs"],
+    status: "not_started",
+    repo_url: "",
+    notes: "Golden ticket project for Qualcomm, Intel, NVIDIA, Synopsys."
+  }
+];
+
+export const GATE_FORMULA_VAULT = [
+  {
+    id: "f_math",
+    subject: "Engineering Mathematics",
+    icon: "Calculator",
+    color: "amber",
+    cards: [
+      {
+        title: "Eigenvalues & Cayley-Hamilton Properties",
+        key_formula: "Sum(λi) = Trace(A)  |  Prod(λi) = Det(A)  |  P(A) = 0",
+        explanation: "1. For any matrix A, the sum of eigenvalues always equals the trace (sum of diagonal elements).\n2. The product of eigenvalues equals det(A). If det(A) = 0, at least one eigenvalue is 0.\n3. Eigenvalues of A^k are λi^k. Eigenvalues of A^-1 are 1/λi.\n4. Cayley-Hamilton Theorem: Every square matrix satisfies its own characteristic equation: |A - λI| = 0 => P(A) = 0. Use this to quickly compute A^-1 or high powers A^k.",
+        traps: "TRAP: Do not compute characteristic polynomial for triangular/diagonal matrices—their eigenvalues are simply the diagonal entries!"
+      },
+      {
+        title: "System of Linear Equations (AX = B)",
+        key_formula: "Unique: Rank(A) = Rank(A|B) = n  |  Infinite: Rank < n  |  No Solution: Rank(A) != Rank(A|B)",
+        explanation: "For n variables:\n- Consistent with Unique Solution: Rank(A) = Rank([A|B]) = n\n- Consistent with Infinitely Many Solutions: Rank(A) = Rank([A|B]) = r < n (number of free parameters = n - r)\n- Inconsistent (No Solution): Rank(A) < Rank([A|B])\n- Homogeneous (AX = 0): Always consistent! Unique trivial solution if Rank(A) = n; Non-trivial solutions if Det(A) = 0 (Rank < n).",
+        traps: "TRAP: In homogeneous systems, 'no solution' is impossible—zero vector is always a solution."
+      },
+      {
+        title: "Cauchy-Riemann Equations & Residues",
+        key_formula: "ux = vy,  uy = -vx  |  Residue(z0) = lim[z->z0] (z - z0) f(z)",
+        explanation: "A complex function f(z) = u(x,y) + i*v(x,y) is analytic if and only if partial derivatives are continuous and satisfy:\n∂u/∂x = ∂v/∂y  and  ∂u/∂y = -∂v/∂x.\nFor a simple pole at z = z0: Res[f(z), z0] = lim(z->z0) (z - z0)*f(z).\nContour Integral: ∮ f(z) dz = 2πi * Σ Res.",
+        traps: "TRAP: Watch the sign in ∂u/∂y = -∂v/∂x. For poles of order m, remember the (1/(m-1)!) factor!"
+      }
+    ]
+  },
+  {
+    id: "f_digital",
+    subject: "Digital Circuits",
+    icon: "Cpu",
+    color: "indigo",
+    cards: [
+      {
+        title: "Setup & Hold Time Violation Equations",
+        key_formula: "Tclk >= Tcq + Tcomb + Tsetup - Tskew  |  Thold <= Tcq + Tcomb_min + Tskew",
+        explanation: "1. Setup Constraint (Max Delay): Data must arrive at least Tsetup before the clock edge.\nTclk >= Tcq(max) + Tcomb(max) + Tsetup - Tskew (where positive skew helps setup).\n2. Hold Constraint (Min Delay): Data must not change for Thold after the clock edge.\nTcq(min) + Tcomb(min) >= Thold + Tskew (independent of clock frequency Tclk!).",
+        traps: "FATAL GATE TRAP: Decreasing clock frequency fixes SETUP violations, but CANNOT fix HOLD violations!"
+      },
+      {
+        title: "Ripple vs Synchronous Counter Frequency",
+        key_formula: "Ripple: fmax = 1 / (N * t_pd + t_setup)  |  Sync: fmax = 1 / (t_pd + t_comb + t_setup)",
+        explanation: "In an N-bit ripple (asynchronous) counter, each flip-flop clock is triggered by the previous flip-flop output. Hence, delays accumulate across all N stages:\nTotal Delay = N * t_pd + t_setup => f_max = 1 / (N * t_pd + t_setup).\nIn a synchronous counter, all flip-flops clock simultaneously, so delay is only one flip-flop propagation delay plus combinational logic: f_max = 1 / (t_pd + t_comb + t_setup).",
+        traps: "TRAP: Check whether the question states 'ripple' or 'synchronous'. Delays only multiply by N in ripple counters!"
+      },
+      {
+        title: "Multiplexer Universal Sizing Rule",
+        key_formula: "n variables implemented with 2^(n-1):1 MUX",
+        explanation: "To implement an n-variable boolean function with a 2^(n-1)-to-1 MUX:\n1. Connect (n - 1) variables to the select lines.\n2. The remaining 1 variable (or 0, 1, or complement) forms the data inputs (I0, I1, ...).\n3. To implement an n-variable function with a 2^(n-2):1 MUX, an additional inverter or external gate is required.",
+        traps: "TRAP: Keep variable order strict! Select lines S1, S0 must correspond to MSB/LSB consistently."
+      }
+    ]
+  },
+  {
+    id: "f_control",
+    subject: "Control Systems",
+    icon: "Target",
+    color: "emerald",
+    cards: [
+      {
+        title: "Standard Second-Order System Dynamics",
+        key_formula: "T(s) = ωn^2 / (s^2 + 2ζωn s + ωn^2)  |  %Mp = exp(-πζ / sqrt(1-ζ^2)) * 100",
+        explanation: "For damping ratio ζ:\n- Undamped: ζ = 0 (pure oscillation on jω axis)\n- Underdamped: 0 < ζ < 1 (decaying oscillations, complex conjugate poles)\n- Critically Damped: ζ = 1 (fastest response without overshoot, real equal poles)\n- Overdamped: ζ > 1 (slow sluggish response, two distinct real poles)\nSettling Time:\nts (2% band) = 4 / (ζ * ωn)\nts (5% band) = 3 / (ζ * ωn)\nPeak Time: tp = π / (ωn * sqrt(1 - ζ^2))",
+        traps: "TRAP: Peak overshoot %Mp depends SOLELY on damping ratio ζ, completely independent of natural frequency ωn!"
+      },
+      {
+        title: "Routh-Hurwitz Stability Criteria",
+        key_formula: "Number of sign changes in 1st column = Number of Right-Half Plane (RHP) poles",
+        explanation: "1. For stability, all coefficients of characteristic equation must be positive, and all elements in the first column of the Routh array must have the same sign.\n2. Row of zeros indicates symmetric roots about origin (pairs of jω poles or complex quads). Form auxiliary polynomial A(s) from previous row and differentiate dA(s)/ds to continue.",
+        traps: "TRAP: A row of all zeros does NOT immediately mean the system is stable—it often indicates marginal stability or jω axis poles."
+      }
+    ]
+  },
+  {
+    id: "f_networks",
+    subject: "Network Theory",
+    icon: "Zap",
+    color: "sky",
+    cards: [
+      {
+        title: "Maximum Power Transfer Theorem",
+        key_formula: "DC: RL = Rth (Pmax = Vth^2 / 4Rth)  |  AC: ZL = Zth* (Pmax = Vth^2 / 4Rth)",
+        explanation: "1. DC Circuits: Maximum power transferred to load resistor RL when RL = Rth. Maximum power = Vth^2 / (4 * Rth). Efficiency at max power is exactly 50%!\n2. AC with variable complex load ZL = RL + jXL: Maximum power when ZL = Zth* (conjugate: RL = Rth and XL = -Xth).\n3. AC with purely resistive load RL: RL = |Zth| = sqrt(Rth^2 + Xth^2).",
+        traps: "TRAP: If RL is variable and XL is fixed, ZL is NOT simply Zth*. Check whether only RL or both RL and XL can vary!"
+      },
+      {
+        title: "Two-Port Network Parameter Matrix Rules",
+        key_formula: "Reciprocity: Z12=Z21 | Y12=Y21 | AD-BC=1 | h12=-h21",
+        explanation: "Symmetry Conditions:\n- Z-parameters: Z11 = Z22\n- Y-parameters: Y11 = Y22\n- ABCD-parameters: A = D\n- h-parameters: h11*h22 - h12*h21 = 1 (Δh = 1)\nReciprocity Conditions:\n- Z: Z12 = Z21\n- Y: Y12 = Y21\n- ABCD: AD - BC = 1\n- h: h12 = -h21",
+        traps: "TRAP: Note the negative sign in h-parameter reciprocity: h12 = -h21!"
+      }
+    ]
   }
 ];
 

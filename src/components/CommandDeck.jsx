@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Flame, CheckCircle2, Clock, Calendar, Zap, AlertTriangle, 
   BookOpen, Cpu, Globe, MessageSquare, ChevronRight, Award,
-  Check, ArrowUpRight, ShieldCheck, RefreshCw, Plus, Minus, RotateCcw, Sparkles
+  Check, ArrowUpRight, ShieldCheck, RefreshCw, Plus, Minus, RotateCcw, 
+  Sparkles, Trash2, Play, Pause, PlusCircle, FileText, PenLine
 } from 'lucide-react';
 import { OPERATING_MODALITIES } from '../data/careerData';
 
@@ -12,6 +13,18 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
 
   // Calculate Countdown to GATE 2028 (Feb 5, 2028)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Add Task Modal State
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [newTaskPillar, setNewTaskPillar] = useState('GATE');
+  const [newTaskDuration, setNewTaskDuration] = useState(45);
+  const [newTaskTag, setNewTaskTag] = useState('Math');
+
+  // Study Session Focus Timer State
+  const [focusDuration, setFocusDuration] = useState(45);
+  const [focusSeconds, setFocusSeconds] = useState(45 * 60);
+  const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     const targetDate = new Date('2028-02-05T09:00:00+05:30').getTime();
@@ -31,6 +44,72 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
     const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Focus Timer Countdown
+  useEffect(() => {
+    let timer = null;
+    if (timerActive && focusSeconds > 0) {
+      timer = setInterval(() => {
+        setFocusSeconds(s => s - 1);
+      }, 1000);
+    } else if (focusSeconds === 0 && timerActive) {
+      setTimerActive(false);
+      alert("Study sprint complete! Log this block to your Net Study Clock.");
+    }
+    return () => clearInterval(timer);
+  }, [timerActive, focusSeconds]);
+
+  const selectTimerDuration = (mins) => {
+    setTimerActive(false);
+    setFocusDuration(mins);
+    setFocusSeconds(mins * 60);
+  };
+
+  const logFocusSession = () => {
+    const hours = parseFloat((focusDuration / 60).toFixed(1));
+    adjustStreak('total_hours_studied', hours, true);
+    setTimerActive(false);
+    setFocusSeconds(focusDuration * 60);
+    alert(`Logged +${hours} hrs to your Net Study Clock!`);
+  };
+
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTaskText.trim()) return;
+    const task = {
+      id: `t_${Date.now()}`,
+      pillar: newTaskPillar,
+      text: newTaskText.trim(),
+      duration: Number(newTaskDuration) || 30,
+      done: false,
+      tag: newTaskTag.trim() || 'General'
+    };
+    updateState({
+      ...state,
+      today: {
+        ...today,
+        tasks: [...today.tasks, task]
+      }
+    });
+    setNewTaskText('');
+    setShowAddTask(false);
+  };
+
+  const deleteTask = (taskId, e) => {
+    e.stopPropagation();
+    const updatedTasks = today.tasks.filter(t => t.id !== taskId);
+    const gateMins = updatedTasks
+      .filter(t => t.pillar === 'GATE' && t.done)
+      .reduce((acc, t) => acc + (t.duration || 0), 0);
+    updateState({
+      ...state,
+      today: {
+        ...today,
+        gate_minutes_done: gateMins,
+        tasks: updatedTasks
+      }
+    });
+  };
 
   const toggleTask = (taskId) => {
     const updatedTasks = today.tasks.map(t => {
@@ -91,7 +170,8 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
           japanese_days: 0,
           total_hours_studied: 0,
           total_pyqs_solved: 0
-        }
+        },
+        daily_notes: ""
       });
     }
   };
@@ -128,7 +208,7 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
   };
 
   const completedCount = today.tasks.filter(t => t.done).length;
-  const progressPercent = Math.round((completedCount / today.tasks.length) * 100);
+  const progressPercent = today.tasks.length ? Math.round((completedCount / today.tasks.length) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -429,7 +509,7 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Tasks (2 cols) */}
         <div className="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -437,23 +517,104 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
               </h2>
               <p className="text-xs text-slate-400">Execute today's mission. Quality and focused recall &gt; long distracted hours.</p>
             </div>
-            <div className="text-right">
-              <span className="text-xs font-mono font-bold text-white">{completedCount} / {today.tasks.length} Done</span>
-              <div className="w-24 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercent}%` }}
-                ></div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddTask(!showAddTask)}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                {showAddTask ? 'Close' : 'Add Task'}
+              </button>
+              <div className="text-right">
+                <span className="text-xs font-mono font-bold text-white">{completedCount} / {today.tasks.length} Done</span>
+                <div className="w-24 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Add Custom Task Form */}
+          {showAddTask && (
+            <form onSubmit={handleAddTask} className="p-4 rounded-xl bg-slate-950 border border-indigo-500/40 space-y-3 animate-fadeIn">
+              <div className="text-xs font-bold text-indigo-300">Create Custom Study Task</div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="e.g. Solve 8 GATE PYQs on Op-Amps & Inverting Amplifiers"
+                  value={newTaskText}
+                  onChange={(e) => setNewTaskText(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[10px] text-slate-400 font-mono block mb-1">Pillar</label>
+                  <select
+                    value={newTaskPillar}
+                    onChange={(e) => setNewTaskPillar(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value="GATE">GATE ECE</option>
+                    <option value="VLSI DV">VLSI DV</option>
+                    <option value="College">College</option>
+                    <option value="English">English</option>
+                    <option value="Japanese">Japanese</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 font-mono block mb-1">Duration (mins)</label>
+                  <select
+                    value={newTaskDuration}
+                    onChange={(e) => setNewTaskDuration(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value={15}>15 mins</option>
+                    <option value={30}>30 mins</option>
+                    <option value={45}>45 mins</option>
+                    <option value={60}>60 mins</option>
+                    <option value={90}>90 mins</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 font-mono block mb-1">Subject Tag</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Math / DLD"
+                    value={newTaskTag}
+                    onChange={(e) => setNewTaskTag(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAddTask(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs"
+                >
+                  Add to Daily Plan
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="space-y-2.5">
             {today.tasks.map((task) => (
               <div 
                 key={task.id}
                 onClick={() => toggleTask(task.id)}
-                className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                className={`group p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
                   task.done 
                     ? 'bg-slate-950/40 border-slate-800/60 opacity-60' 
                     : 'bg-slate-950/90 border-slate-800 hover:border-slate-700'
@@ -475,19 +636,46 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
                       task.pillar === 'GATE' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
                       task.pillar === 'English' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
                       task.pillar === 'Japanese' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                      task.pillar === 'College' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                       'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                     }`}>
                       {task.pillar}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">⏱️ {task.duration} mins</span>
-                    <span className="text-[10px] text-slate-500 font-mono ml-auto">{task.tag}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{task.tag}</span>
                   </div>
                   <p className={`text-xs md:text-sm ${task.done ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}`}>
                     {task.text}
                   </p>
                 </div>
+
+                <button
+                  onClick={(e) => deleteTask(task.id, e)}
+                  className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                  title="Delete task"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))}
+          </div>
+
+          {/* Daily Engineering Notes & Reflections */}
+          <div className="pt-2 border-t border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <PenLine className="w-3.5 h-3.5 text-indigo-400" />
+                Daily Engineering Log &amp; Observations
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">Auto-saved to device</span>
+            </div>
+            <textarea
+              value={state.daily_notes || ""}
+              onChange={(e) => updateState({ ...state, daily_notes: e.target.value })}
+              placeholder="Record breakthroughs, formulas derived, mistakes noted, or questions to ask professors/mentors tomorrow..."
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50"
+              rows={3}
+            />
           </div>
 
           <div className="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800">
@@ -503,6 +691,61 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
 
         {/* Quick Launchpads & High-Value Overlap Radar */}
         <div className="space-y-4">
+          {/* Study Sprint Focus Timer (Pomodoro Engine) */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                Study Sprint Timer
+              </span>
+              <div className="flex items-center gap-1">
+                {[25, 45, 60].map((mins) => (
+                  <button
+                    key={mins}
+                    onClick={() => selectTimerDuration(mins)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                      focusDuration === mins && !timerActive 
+                        ? 'bg-amber-500 text-slate-950' 
+                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {mins}m
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timer Display */}
+            <div className="text-center py-3 bg-slate-950/80 rounded-xl border border-slate-800">
+              <div className="text-3xl font-black font-mono text-white tracking-widest">
+                {String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:{String(focusSeconds % 60).padStart(2, '0')}
+              </div>
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                {timerActive ? 'Deep Work Sprint Active' : 'Ready to Start Sprint'}
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTimerActive(!timerActive)}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  timerActive ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                }`}
+              >
+                {timerActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                {timerActive ? 'Pause' : 'Start Focus Sprint'}
+              </button>
+              <button
+                onClick={logFocusSession}
+                className="px-3 py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white text-xs font-bold"
+                title="Log session time to Net Study Clock"
+              >
+                Log +{parseFloat((focusDuration / 60).toFixed(1))}h
+              </button>
+            </div>
+          </div>
+
           {/* High-Value Overlap Spotlight */}
           <div className="bg-gradient-to-br from-emerald-950/30 to-slate-900 border border-emerald-500/20 rounded-2xl p-4 space-y-3">
             <div className="flex items-center justify-between">
