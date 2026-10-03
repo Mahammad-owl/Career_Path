@@ -37,7 +37,9 @@ export default function App() {
           topic_pyqs: parsed.topic_pyqs || {},
           error_book: parsed.error_book || [],
           dv_projects: parsed.dv_projects || [],
+          active_dv_stage: parsed.active_dv_stage || 0,
           japanese_mastered_ids: parsed.japanese_mastered_ids || [],
+          weekly_review: parsed.weekly_review || INITIAL_USER_STATE.weekly_review,
           daily_notes: parsed.daily_notes || ""
         };
       }

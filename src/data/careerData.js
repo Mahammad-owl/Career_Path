@@ -45,7 +45,15 @@ export const INITIAL_USER_STATE = {
   syllabus_in_progress_ids: [],
   topic_pyqs: {},
   error_book: [],
-  dv_projects_progress: {},
+  dv_projects: [],
+  active_dv_stage: 0,
+  japanese_mastered_ids: [],
+  weekly_review: {
+    mastered: "",
+    struggled: "",
+    error_pattern: "",
+    next_action: ""
+  },
   daily_notes: ""
 };
 
@@ -461,30 +469,30 @@ export const DV_ROADMAP_STAGES = [
   },
   {
     stage: 13,
-    title: "UVM TLM, Sequences & Scoreboards",
-    timeframe: "Sem 4-1 (Oct 2028)",
+    title: "UVM TLM Communication & Factory Overrides",
+    timeframe: "Sem 4-1 (Sep 2028)",
     status: "queued",
     prerequisites: "Stage 12",
-    topics: ["Transaction-Level Modeling (TLM 1.0 & 2.0)", "TLM Ports, Exports, Imps, and Analysis Ports", "UVM Driver (`get_next_item`, `item_done`) and Sequencer handshake", "UVM Sequences: Base sequence, Directed sequence, Virtual sequence, Virtual sequencer", "Building an in-order and out-of-order UVM Scoreboard with predictor"],
-    exercises: ["Connect UVM monitor analysis port to UVM scoreboard and coverage subscriber", "Write virtual sequence coordinating multi-interface transaction bursts"],
-    project: "UVM Verification Environment for APB-Slave Memory Peripheral",
-    exit_criteria: "Can structure end-to-end UVM verification environments from scratch."
+    topics: ["Transaction-Level Modeling (TLM 1.0 & 2.0)", "TLM Ports, Exports, Imps, and Analysis Ports", "UVM Driver (`get_next_item`, `item_done`) and Sequencer handshake", "Factory object & component overrides by type or instance"],
+    exercises: ["Connect UVM monitor analysis port to UVM scoreboard and coverage subscriber", "Perform dynamic component substitution using factory override without modifying testbench code"],
+    project: "TLM-Based Verification Subsystem for Register Interface",
+    exit_criteria: "Can structure modular TLM connections and factory overrides."
   },
   {
     stage: 14,
-    title: "Capstone DV Portfolio Project",
-    timeframe: "Sem 4-1 / Sem 4-2 (Nov - Dec 2028)",
+    title: "UVM Sequences, Virtual Sequencers & Scoreboards",
+    timeframe: "Sem 4-1 (Oct 2028)",
     status: "queued",
     prerequisites: "Stage 13",
-    topics: ["Architecting production-grade verification environments", "DUT selection: AXI-to-APB Bridge OR 4-Port Network Packet Switch", "Test plan authoring: Features, Scenarios, Assertions, Coverage goals", "Automated regression testing scripts (Makefile / Python test runner)", "Bug hunting: Injecting intentional subtle RTL bugs and proving testbench detects them"],
-    exercises: ["Achieve 100% functional and code coverage on capstone DUT", "Generate comprehensive HTML verification closure report"],
-    project: "CAPSTONE: Complete UVM Verification Environment for AXI-to-APB Bridge with Automated Regression & 100% Coverage Closure",
-    exit_criteria: "Project hosted on GitHub with detailed README, verification architecture diagrams, waveforms, and coverage metrics."
+    topics: ["UVM Sequences: Base sequence, Directed sequence, Virtual sequence, Virtual sequencer", "Building an in-order and out-of-order UVM Scoreboard with reference predictor", "Handling concurrent transactions and out-of-order responses"],
+    exercises: ["Write virtual sequence coordinating multi-interface transaction bursts", "Build golden reference model for complex transaction verification"],
+    project: "UVM Verification Environment for Multi-Channel Peripheral Interface",
+    exit_criteria: "Can coordinate multi-channel verification sequences with scoreboards."
   },
   {
     stage: 15,
-    title: "Linux, Git, Scripting & Professional DV Toolchains",
-    timeframe: "Continuous / Sem 4-2 (Jan 2029)",
+    title: "Linux, Git, Scripting & Professional EDA Toolchains",
+    timeframe: "Continuous / Sem 4-1 (Nov 2028)",
     status: "queued",
     prerequisites: "Stage 14",
     topics: ["Linux command line mastery: grep, sed, awk, find, pipes, bash scripting", "Git workflows: Branching, pull requests, semantic commits, tags", "EDA Simulation toolchains (Cadence Xcelium / Synopsys VCS / QuestaSim / open-source Verilator / Icarus)", "Makefile automation for regressions", "Waveform debugging using GTKWave / SimVision"],
@@ -494,14 +502,36 @@ export const DV_ROADMAP_STAGES = [
   },
   {
     stage: 16,
-    title: "DV Interview Technical Drills & Resume Architecture",
-    timeframe: "Sem 4-2 (Feb - Apr 2029)",
+    title: "Project 1: Dual-Clock Asynchronous FIFO SV Verification Env",
+    timeframe: "Sem 4-1 (Dec 2028)",
     status: "queued",
-    prerequisites: "Stage 15",
-    topics: ["Top 100 SystemVerilog & UVM technical interview questions", "Debugging tricky race conditions and assertion failures on whiteboards", "Explaining project architecture clearly in technical English", "Tailored VLSI Design Verification Engineer Resume (Action + Metric + Tech stack)", "LinkedIn presence and reaching out to VLSI verification engineering managers"],
-    exercises: ["Deliver 5 mock technical interviews covering OOP, UVM phases, CDC, and SVA", "Complete 20 live paper-coding problems on FIFO and FSM design"],
-    project: "Industry-Ready Technical DV Portfolio & Professional Engineering Dossier",
-    exit_criteria: "Receives core VLSI Design Verification job/internship offers."
+    prerequisites: "Stages 1 - 10",
+    topics: ["Gray code pointer cross-domain synchronization (2-FF synchronizer)", "Full and Empty flag generation corner cases", "Constrained random multi-clock read/write traffic generation", "SystemVerilog Assertions (SVA) checking no data corruption or overflow", "100% functional coverage across all occupancy depths"],
+    exercises: ["Simulate fast write / slow read and slow write / fast read clock ratios", "Validate zero metastability across 1,000,000 randomized transfers"],
+    project: "Dual-Clock Asynchronous FIFO SV Verification Environment on GitHub",
+    exit_criteria: "Repository hosted with detailed timing diagrams, architecture README, and simulation logs."
+  },
+  {
+    stage: 17,
+    title: "Project 2: Complete APB Protocol Compliant Verification IP (VIP)",
+    timeframe: "Sem 4-2 (Jan - Feb 2029)",
+    status: "queued",
+    prerequisites: "Stages 11 - 14",
+    topics: ["Complete ARM AMBA APB Master & Slave VIP", "Protocol compliance checks: Setup, Access, Wait states (PREADY), Slave error (PSLVERR)", "Coverage model for all valid bus transfer types and back-to-back bursts", "Modular VIP structure easily pluggable into any SoC testbench"],
+    exercises: ["Run automated regression injecting wait-states and protocol error responses", "Verify compliance against official ARM AMBA APB specification"],
+    project: "Production-Grade APB VIP Repository with Automated Test Suite",
+    exit_criteria: "VIP ready for plug-and-play integration in industry testbenches."
+  },
+  {
+    stage: 18,
+    title: "Project 3 (Capstone): Full UVM Environment for AXI-to-APB Bridge",
+    timeframe: "Sem 4-2 (Mar - Apr 2029)",
+    status: "queued",
+    prerequisites: "Stages 12 - 17",
+    topics: ["Full UVM 1.2 testbench for AXI4-Lite to APB Bridge / 4-Port Packet Router", "100% Functional & Code Coverage closure", "Constrained Random Testing across all address ranges and burst lengths", "Comprehensive SVA Assertions guarding both AXI and APB bus protocols", "Automated regression scripts with HTML coverage report generation"],
+    exercises: ["Inject subtle RTL race condition and prove UVM scoreboard detects it", "Deliver 45-minute technical presentation explaining the entire verification architecture"],
+    project: "Flagship UVM Capstone Repository: AXI-to-APB Bridge Verification Environment",
+    exit_criteria: "Complete flagship portfolio piece that secures core VLSI Design Verification offers."
   }
 ];
 
@@ -788,3 +818,120 @@ export const BACKLOG_RECOVERY_STRATEGIES = [
     action_plan: "1. Shift 90% of study time to college semester preparation.\n2. Keep GATE on a 15-minute formula recall loop.\n3. Japanese: 10 words/day streak saver (takes 7 minutes).\n4. After finals end: Take a 2-day recovery rest, then launch into vacation deep-work mode."
   }
 ];
+
+export const GATE_EXAM_SPECIFICATION = {
+  total_questions: 65,
+  total_marks: 100,
+  duration_minutes: 180,
+  delivery_mode: "Computer Based Test (CBT)",
+  mark_distribution: [
+    { section: "General Aptitude (GA)", marks: 15, questions: 10, notes: "5 questions of 1-mark + 5 questions of 2-marks. Verbal, quantitative, and spatial aptitude." },
+    { section: "Engineering Mathematics", marks: 13, questions: 8, notes: "Linear Algebra, Calculus, Differential Equations, Vector Analysis, Complex Variables, Probability." },
+    { section: "Core ECE Technical", marks: 72, questions: 47, notes: "8 core sections: Networks, Signals, Electronic Devices, Analog, Digital, Control, Comms, Electromagnetics." }
+  ],
+  question_types: [
+    { type: "MCQ (Multiple Choice Questions)", scoring: "1 mark (-0.33 negative) or 2 marks (-0.66 negative)", strategy: "Never make wild guesses. Use systematic elimination." },
+    { type: "MSQ (Multiple Select Questions)", scoring: "1 or 2 marks. ZERO negative marking.", strategy: "Full marks only if ALL correct choices and ZERO incorrect choices are chosen. Partial marks: Nil." },
+    { type: "NAT (Numerical Answer Type)", scoring: "1 or 2 marks. ZERO negative marking.", strategy: "Exact decimal entered via virtual keypad. Watch round-off precision (3 decimal places recommended)." }
+  ],
+  virtual_calculator_rules: [
+    "No physical calculator allowed in examination hall.",
+    "Practice exclusively on the on-screen TCS iON virtual calculator.",
+    "Parentheses order of operations: Always evaluate inner brackets first.",
+    "Trigonometric functions: Toggle between Degree and Radian modes carefully."
+  ]
+};
+
+export const GATE_2028_VERIFICATION_CHECKPOINTS = [
+  {
+    timeline: "July 2027",
+    milestone: "Organizing Institute Announcement",
+    description: "Official announcement of the organizing IIT (e.g. IIT Bombay, IIT Delhi, or IIT Kharagpur).",
+    action: "Analyze previous paper style & question flavor of the organizing institute."
+  },
+  {
+    timeline: "August 2027",
+    milestone: "Official 2028 Information Brochure & Syllabus",
+    description: "Release of the official 2028 Information Brochure and detailed syllabus PDF.",
+    action: "Cross-verify all 8 ECE sections for any newly introduced or removed subtopics."
+  },
+  {
+    timeline: "August – October 2027",
+    milestone: "Online Application Portal (GOAPS)",
+    description: "Registration and document submission for 3rd year undergraduate eligibility.",
+    action: "Submit registration with college bonafide certificate."
+  },
+  {
+    timeline: "January 2028",
+    milestone: "Admit Card & Mock Exam Center Simulation",
+    description: "Admit card download and release of official mock test on organizing institute portal.",
+    action: "Take 3 official CBT mock tests on the exact interface."
+  },
+  {
+    timeline: "February 2028",
+    milestone: "GATE ECE 2028 D-Day",
+    description: "Primary 3-hour Computer Based Test.",
+    action: "Target: AIR < 300 / 70+ Marks."
+  }
+];
+
+export const PILLAR_DEPENDENCY_DATA = [
+  {
+    id: "spine_math",
+    title: "Mathematical Foundation Spine",
+    color: "amber",
+    nodes: ["Calculus & Linear Algebra", "Differential Equations & Vector Analysis", "Probability & Random Variables"],
+    feeds_into: "Feeds into Signals & Systems, Control Systems, Communications & EMFT"
+  },
+  {
+    id: "spine_signals",
+    title: "Signals & Systems Spine",
+    color: "sky",
+    nodes: ["Signals & Systems (LTI, Fourier, Laplace)", "Digital Signal Processing (Sem 2-1 Overlap)", "Control Systems (Sem 2-1 Overlap)", "Analog & Digital Communications"],
+    feeds_into: "Essential for core signal analysis and college 2-1 high GPA"
+  },
+  {
+    id: "spine_circuits",
+    title: "Circuits & Devices Spine",
+    color: "emerald",
+    nodes: ["Network Theory (Theorems, Transients, Two-Port)", "Electronic Devices EDC (Semiconductors, P-N, MOS)", "Analog Circuits (Op-Amps, Amplifiers, Biasing)", "Electromagnetics EMFT"],
+    feeds_into: "Foundation for hardware physics, silicon implementation, and analog circuits"
+  },
+  {
+    id: "spine_digital_dv",
+    title: "Digital Logic to VLSI DV Spine",
+    color: "indigo",
+    nodes: ["Digital Logic Design (Sem 2-1 Triple Value)", "Synthesizable Verilog HDL", "RTL Architecture & FSMs", "SystemVerilog for Verification (OOP, Randomization)", "SVA Assertions & Functional Coverage", "Bus Protocols (APB, AXI4-Lite, SPI)", "Universal Verification Methodology (UVM)", "Flagship Industry DV Capstone"],
+    feeds_into: "Core semiconductor specialization securing VLSI Design Verification engineering roles"
+  }
+];
+
+export const JAPANESE_KANA_SYSTEM = [
+  { row: "A-Row", characters: [{ h: "あ", k: "ア", r: "a" }, { h: "い", k: "イ", r: "i" }, { h: "う", k: "ウ", r: "u" }, { h: "え", k: "エ", r: "e" }, { h: "お", k: "オ", r: "o" }] },
+  { row: "Ka-Row", characters: [{ h: "か", k: "カ", r: "ka" }, { h: "き", k: "キ", r: "ki" }, { h: "く", k: "ク", r: "ku" }, { h: "け", k: "ケ", r: "ke" }, { h: "こ", k: "コ", r: "ko" }] },
+  { row: "Sa-Row", characters: [{ h: "さ", k: "サ", r: "sa" }, { h: "し", k: "シ", r: "shi" }, { h: "す", k: "ス", r: "su" }, { h: "せ", k: "セ", r: "se" }, { h: "そ", k: "ソ", r: "so" }] },
+  { row: "Ta-Row", characters: [{ h: "た", k: "タ", r: "ta" }, { h: "ち", k: "チ", r: "chi" }, { h: "つ", k: "ツ", r: "tsu" }, { h: "て", k: "テ", r: "te" }, { h: "と", k: "ト", r: "to" }] },
+  { row: "Na-Row", characters: [{ h: "な", k: "ナ", r: "na" }, { h: "に", k: "ニ", r: "ni" }, { h: "ぬ", k: "ヌ", r: "nu" }, { h: "ね", k: "ネ", r: "ne" }, { h: "の", k: "ノ", r: "no" }] },
+  { row: "Ha-Row", characters: [{ h: "は", k: "ハ", r: "ha" }, { h: "ひ", k: "ヒ", r: "hi" }, { h: "ふ", k: "フ", r: "fu" }, { h: "へ", k: "ヘ", r: "he" }, { h: "ほ", k: "ホ", r: "ho" }] },
+  { row: "Ma-Row", characters: [{ h: "ま", k: "マ", r: "ma" }, { h: "み", k: "ミ", r: "mi" }, { h: "む", k: "ム", r: "mu" }, { h: "め", k: "メ", r: "me" }, { h: "も", k: "モ", r: "mo" }] },
+  { row: "Ya-Row", characters: [{ h: "や", k: "ヤ", r: "ya" }, { h: "ゆ", k: "ユ", r: "yu" }, { h: "よ", k: "ヨ", r: "yo" }] },
+  { row: "Ra-Row", characters: [{ h: "ら", k: "ラ", r: "ra" }, { h: "り", k: "リ", r: "ri" }, { h: "る", k: "ル", r: "ru" }, { h: "れ", k: "レ", r: "re" }, { h: "ろ", k: "ロ", r: "ro" }] },
+  { row: "Wa / N", characters: [{ h: "わ", k: "ワ", r: "wa" }, { h: "を", k: "ヲ", r: "wo" }, { h: "ん", k: "ン", r: "n" }] }
+];
+
+export const JAPANESE_JLPT_ROADMAP = [
+  { phase: "Phase A", timeframe: "Months 1 - 2 (Oct - Nov 2026)", target: "Hiragana + Katakana Mastery + 300 Core N5 Vocab", status: "active" },
+  { phase: "Phase B", timeframe: "Months 3 - 6 (Dec 2026 - Mar 2027)", target: "Genki I / Tae Kim Grammar + 80 Kanji + 600 Vocab", status: "upcoming" },
+  { phase: "Phase C", timeframe: "Months 7 - 10 (Apr - Jul 2027)", target: "Complete N5 Past Papers + 100 Kanji + 800 Vocab", status: "upcoming" },
+  { phase: "Phase D", timeframe: "Month 11 (Dec 2027)", target: "Appear for Official JLPT N5 Examination", status: "target" },
+  { phase: "Phase E", timeframe: "Year 2028 (Sem 3-2 to 4-1)", target: "JLPT N4 Progression (1,500 words + 300 Kanji)", status: "upcoming" },
+  { phase: "Phase F", timeframe: "Year 2029 (Graduation)", target: "JLPT N3 Practical Conversational & Technical Reading", status: "upcoming" }
+];
+
+export const ENGLISH_MILESTONES = [
+  { milestone: 1, title: "Frictionless Technical Concept Delivery", timeframe: "Month 1 (Oct 2026)", goal: "Deliver 90-second technical explanations aloud without Hindi/Telugu fillers or hesitation.", status: "active" },
+  { milestone: 2, title: "Waveform & Bug Walkthrough", timeframe: "Sem 2-2 (May 2027)", goal: "Explain RTL simulation waveforms, race conditions, and bug fixes verbally in fluid English.", status: "upcoming" },
+  { milestone: 3, title: "Structured Behavioral & STAR Responses", timeframe: "Sem 3-1 (Nov 2027)", goal: "Structure technical decisions using Situation, Task, Action, Result framework.", status: "upcoming" },
+  { milestone: 4, title: "Full Mock Technical Interview Closure", timeframe: "Sem 4-1 (Oct 2028)", goal: "Lead 45-minute technical interviews with zero communication barriers.", status: "upcoming" }
+];
+

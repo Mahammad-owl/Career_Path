@@ -781,7 +781,7 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
                 <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-xs">G</div>
                 <div>
                   <div className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">GATE Error Book</div>
-                  <div className="text-[10px] text-slate-400">2 errors due for spaced review today</div>
+                  <div className="text-[10px] text-slate-400">{(state.error_book || []).length} errors in Spaced Review Bank</div>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-amber-400 transition-colors" />
@@ -794,8 +794,8 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-xs">DV</div>
                 <div>
-                  <div className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">VLSI DV Stage 1</div>
-                  <div className="text-[10px] text-slate-400">Digital Logic &amp; Hardware Modeling</div>
+                  <div className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">VLSI DV Studio</div>
+                  <div className="text-[10px] text-slate-400">Stage {(state.active_dv_stage || 0) + 1} of 18 (Foundation)</div>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors" />
@@ -809,7 +809,7 @@ export function CommandDeck({ state, updateState, setActiveTab }) {
                 <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold text-xs">日</div>
                 <div>
                   <div className="text-xs font-bold text-white group-hover:text-rose-400 transition-colors">Japanese Flashcards</div>
-                  <div className="text-[10px] text-slate-400">30 / 800 N5 words mastered</div>
+                  <div className="text-[10px] text-slate-400">{(state.japanese_mastered_ids || []).length} / 800 N5 words mastered</div>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-rose-400 transition-colors" />

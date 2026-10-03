@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import { 
   BookOpen, Target, AlertCircle, Award, CheckCircle2, ChevronDown, 
   ChevronRight, Plus, Filter, Calculator, Sparkles, AlertTriangle, 
-  Calendar, RotateCcw, Clock, Layers, Zap, Cpu, FileText
+  Calendar, RotateCcw, Clock, Layers, Zap, Cpu, FileText, Check,
+  Search, ShieldAlert, ArrowRight, ShieldCheck
 } from 'lucide-react';
-import { GATE_SYLLABUS, TRIPLE_OVERLAP_MATRIX, INITIAL_ERROR_BOOK, GATE_FORMULA_VAULT } from '../data/careerData';
+import { 
+  GATE_SYLLABUS, 
+  TRIPLE_OVERLAP_MATRIX, 
+  INITIAL_ERROR_BOOK, 
+  GATE_FORMULA_VAULT,
+  GATE_EXAM_SPECIFICATION,
+  GATE_2028_VERIFICATION_CHECKPOINTS,
+  PILLAR_DEPENDENCY_DATA
+} from '../data/careerData';
 
 export function GateWarRoom({ state, updateState }) {
-  const [activeSubTab, setActiveSubTab] = useState('syllabus'); // syllabus | formula_vault | overlap | error_book | pyq_system
+  const [activeSubTab, setActiveSubTab] = useState('syllabus'); // syllabus | formula_vault | overlap | blueprint | error_book | pyq_system
   const [expandedSection, setExpandedSection] = useState('sec_math');
   const [selectedFormulaSubject, setSelectedFormulaSubject] = useState('f_digital');
   const [showAddErrorModal, setShowAddErrorModal] = useState(false);
+  const [errorCategoryFilter, setErrorCategoryFilter] = useState('all');
 
   const completedIds = state.syllabus_completed_ids || [];
   const inProgressIds = state.syllabus_in_progress_ids || [];
   const topicPyqs = state.topic_pyqs || {};
-  const errorBook = state.error_book && state.error_book.length > 0 ? state.error_book : INITIAL_ERROR_BOOK;
+  const errorBook = state.error_book || [];
 
   const [newError, setNewError] = useState({
     subject: "Digital Circuits",
@@ -104,6 +114,13 @@ export function GateWarRoom({ state, updateState }) {
     });
   };
 
+  const loadSampleErrors = () => {
+    updateState({
+      ...state,
+      error_book: INITIAL_ERROR_BOOK
+    });
+  };
+
   const advanceErrorInterval = (errorId) => {
     const updated = errorBook.map(item => {
       if (item.id === errorId) {
@@ -129,6 +146,11 @@ export function GateWarRoom({ state, updateState }) {
     });
   };
 
+  const filteredErrors = errorBook.filter(err => {
+    if (errorCategoryFilter === 'all') return true;
+    return err.mistake_category.toLowerCase().includes(errorCategoryFilter.toLowerCase());
+  });
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -139,19 +161,18 @@ export function GateWarRoom({ state, updateState }) {
               <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 PILLAR 1: PRIMARY ACADEMIC TARGET
               </span>
-              <span className="text-xs text-slate-400 font-mono">Exam Date: Feb 2028</span>
+              <span className="text-xs text-slate-400 font-mono">GATE ECE 2028 &bull; Target: AIR &lt; 300 (70+ Marks)</span>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
               <Target className="w-6 h-6 text-amber-400" />
-              GATE ECE 2028 War Room
+              GATE 2028 War Room
             </h1>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Based strictly on the official syllabus: 65 Questions • 100 Marks • 3 Hours CBT.
-              Syllabus progress is verified through solved PYQs, trap mastery, and spaced repetition error logging.
+              Full official GATE ECE syllabus coverage, real high-yield formula vault, triple-overlap alignment with your RGUKT RK Valley college courses, and spaced-repetition error tracking.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto">
             <button
               onClick={() => setActiveSubTab('syllabus')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -175,7 +196,16 @@ export function GateWarRoom({ state, updateState }) {
                 activeSubTab === 'overlap' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Triple Overlap Matrix
+              Pillar Spines &amp; Overlap
+            </button>
+            <button
+              onClick={() => setActiveSubTab('blueprint')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeSubTab === 'blueprint' ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              2028 Blueprint
             </button>
             <button
               onClick={() => setActiveSubTab('error_book')}
@@ -248,90 +278,98 @@ export function GateWarRoom({ state, updateState }) {
                           )}
                         </div>
                         <div className="text-xs text-slate-400 mt-0.5">
-                          {completedTopics} of {totalTopics} topics mastered • {totalPyqsSolved} / {totalPyqsTarget} PYQs solved
+                          {completedTopics} of {totalTopics} topics mastered &bull; {totalPyqsSolved} / {totalPyqsTarget} PYQs solved ({secPercentage}%)
                         </div>
                       </div>
                     </div>
 
-                    <div className="hidden sm:flex items-center gap-4">
-                      <div className="w-32 bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-24 sm:w-36 hidden sm:block">
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
                         <div 
                           className="h-full bg-amber-500 rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(100, secPercentage)}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs font-mono font-bold text-slate-300 w-10 text-right">
-                        {secPercentage}%
-                      </span>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-2.5">
-                      {sec.topics.map((top) => {
-                        const status = completedIds.includes(top.id) ? 'completed' : inProgressIds.includes(top.id) ? 'in_progress' : 'not_started';
-                        const solved = topicPyqs[top.id] || 0;
-                        const mastery = Math.min(100, Math.round((solved / (top.pyqs_target || 1)) * 100));
+                    <div className="border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-3">
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {sec.topics.map((t) => {
+                          const isDone = completedIds.includes(t.id);
+                          const isInProg = inProgressIds.includes(t.id);
+                          const pyqsDone = topicPyqs[t.id] || 0;
 
-                        return (
-                          <div key={top.id} className="p-3 rounded-lg bg-slate-900/80 border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full ${
-                                  status === 'completed' ? 'bg-emerald-400' :
-                                  status === 'in_progress' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'
-                                }`}></span>
-                                <span className="text-xs font-semibold text-white">{top.name}</span>
+                          return (
+                            <div 
+                              key={t.id}
+                              className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                                isDone ? 'bg-emerald-950/20 border-emerald-500/30' :
+                                isInProg ? 'bg-amber-950/20 border-amber-500/30' :
+                                'bg-slate-900/60 border-slate-800/80'
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <button
+                                  onClick={() => toggleTopicStatus(t.id)}
+                                  className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-all ${
+                                    isDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' :
+                                    isInProg ? 'bg-amber-500/20 border-amber-500 text-amber-300' :
+                                    'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-500'
+                                  }`}
+                                  title="Cycle Status: Not Started -> In Progress -> Mastered"
+                                >
+                                  {isDone ? '✓' : isInProg ? '⏳' : ''}
+                                </button>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-slate-200">{t.name}</span>
+                                    <span className="text-[10px] font-mono text-slate-500 font-semibold">{t.code}</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 mt-0.5">
+                                    Status: <strong className={isDone ? 'text-emerald-400' : isInProg ? 'text-amber-400' : 'text-slate-500'}>
+                                      {isDone ? 'Mastered' : isInProg ? 'In Progress' : 'Not Started'}
+                                    </strong>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-[11px] text-slate-400 font-mono">
-                                PYQs: <span className="text-amber-400 font-bold">{solved}</span> / {top.pyqs_target} • 
-                                Mastery Index: <span className="text-indigo-400 font-bold">{mastery}%</span>
+
+                              <div className="flex items-center gap-2 self-end sm:self-auto">
+                                <div className="text-right mr-2">
+                                  <div className="text-xs font-mono font-bold text-white">
+                                    {pyqsDone} / {t.pyqs_target} PYQs
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => adjustTopicPyqs(t.id, -1)}
+                                    className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center"
+                                    title="Subtract 1 PYQ"
+                                  >
+                                    -
+                                  </button>
+                                  <button
+                                    onClick={() => adjustTopicPyqs(t.id, 1)}
+                                    className="px-2 h-6 rounded bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center justify-center"
+                                    title="Add 1 PYQ"
+                                  >
+                                    +1
+                                  </button>
+                                  <button
+                                    onClick={() => adjustTopicPyqs(t.id, 5)}
+                                    className="px-2 h-6 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center"
+                                    title="Add 5 PYQs"
+                                  >
+                                    +5
+                                  </button>
+                                </div>
                               </div>
                             </div>
-
-                            <div className="flex items-center gap-2 self-end sm:self-center">
-                              {/* PYQ Controls */}
-                              <div className="flex items-center gap-1 bg-slate-950 px-1.5 py-0.5 rounded-lg border border-slate-800">
-                                <button
-                                  onClick={() => adjustTopicPyqs(top.id, -1)}
-                                  className="w-5 h-5 rounded hover:bg-slate-800 text-slate-400 flex items-center justify-center text-xs"
-                                  title="Subtract 1 PYQ"
-                                >
-                                  -
-                                </button>
-                                <span className="text-[10px] font-mono font-bold text-slate-300 px-1">{solved}</span>
-                                <button
-                                  onClick={() => adjustTopicPyqs(top.id, 1)}
-                                  className="w-5 h-5 rounded hover:bg-slate-800 text-amber-400 flex items-center justify-center text-xs font-bold"
-                                  title="Add 1 PYQ"
-                                >
-                                  +1
-                                </button>
-                                <button
-                                  onClick={() => adjustTopicPyqs(top.id, 5)}
-                                  className="px-1.5 h-5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 flex items-center justify-center text-[10px] font-bold"
-                                  title="Add 5 PYQs"
-                                >
-                                  +5
-                                </button>
-                              </div>
-
-                              {/* Status Toggle Button */}
-                              <button
-                                onClick={() => toggleTopicStatus(top.id)}
-                                className={`text-[10px] font-mono px-2.5 py-1 rounded-lg font-bold transition-all ${
-                                  status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' :
-                                  status === 'in_progress' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30' :
-                                  'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
-                                }`}
-                                title="Click to cycle: Not Started -> In Progress -> Completed"
-                              >
-                                {status === 'completed' ? '✓ Mastered' : status === 'in_progress' ? '⏳ In Progress' : '○ Not Started'}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -341,62 +379,47 @@ export function GateWarRoom({ state, updateState }) {
         </div>
       )}
 
-      {/* SUBTAB 2: POCKET FORMULA VAULT (HIGH-YIELD REVISION FOR MOBILE) */}
+      {/* SUBTAB 2: POCKET FORMULA VAULT */}
       {activeSubTab === 'formula_vault' && (
         <div className="space-y-4">
-          <div className="bg-amber-950/20 border border-amber-500/30 rounded-xl p-4 text-xs text-slate-300 leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <strong className="text-amber-400 block font-bold text-sm mb-1">
-                Pocket Formula &amp; Trap Vault
-              </strong>
-              Review high-yield formulas and classic exam traps directly from your phone on the go.
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {GATE_FORMULA_VAULT.map(vault => (
-                <button
-                  key={vault.id}
-                  onClick={() => setSelectedFormulaSubject(vault.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    selectedFormulaSubject === vault.id
-                      ? 'bg-amber-500 text-slate-950 font-bold'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  {vault.subject}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
+            {GATE_FORMULA_VAULT.map((subj) => (
+              <button
+                key={subj.id}
+                onClick={() => setSelectedFormulaSubject(subj.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                  selectedFormulaSubject === subj.id 
+                    ? 'bg-amber-500 text-slate-950 shadow-md' 
+                    : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                }`}
+              >
+                {subj.subject}
+              </button>
+            ))}
           </div>
 
-          {/* Cards for active subject */}
-          {GATE_FORMULA_VAULT.filter(v => v.id === selectedFormulaSubject).map(vault => (
-            <div key={vault.id} className="space-y-3">
-              {vault.cards.map((card, idx) => (
-                <div key={idx} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Calculator className="w-4 h-4 text-amber-400" />
-                      {card.title}
-                    </h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                      {vault.subject}
+          {GATE_FORMULA_VAULT.filter(s => s.id === selectedFormulaSubject).map((subj) => (
+            <div key={subj.id} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {subj.cards.map((card, idx) => (
+                <div key={idx} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h4 className="text-sm font-bold text-white">{card.title}</h4>
+                    <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      Formula #{idx + 1}
                     </span>
                   </div>
 
-                  {/* Highlight Formula Box */}
-                  <div className="p-3 rounded-lg bg-slate-950 border border-amber-500/30 font-mono text-amber-300 text-xs md:text-sm font-bold tracking-wide">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-amber-500/20 font-mono text-xs font-bold text-amber-300">
                     {card.key_formula}
                   </div>
 
-                  {/* Core Explanation */}
-                  <div className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                  <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                     {card.explanation}
-                  </div>
+                  </p>
 
-                  {/* Trap Alert */}
                   {card.traps && (
-                    <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <div className="p-2.5 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-300 text-xs font-mono flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
                       <span>{card.traps}</span>
                     </div>
                   )}
@@ -407,62 +430,197 @@ export function GateWarRoom({ state, updateState }) {
         </div>
       )}
 
-      {/* SUBTAB 2: TRIPLE OVERLAP MATRIX */}
+      {/* SUBTAB 3: PILLAR DEPENDENCY SPINES & TRIPLE OVERLAP */}
       {activeSubTab === 'overlap' && (
-        <div className="space-y-4">
-          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-4 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-emerald-400 block font-bold text-sm mb-1">
-              The Anti-Burnout Doctrine: Study Once, Harvest Three Times
-            </strong>
-            When a subject overlaps between your college curriculum, GATE ECE, and VLSI Design Verification, 
-            never treat it as three separate study tasks. Master the concept deeply during college classes, immediately solve all 25 years of GATE PYQs, 
-            and write a synthesizable Verilog testbench on the weekend.
+        <div className="space-y-6">
+          {/* Pillar Dependency Graph Section */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="border-b border-slate-800 pb-3">
+              <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase">
+                Section 2: Pillar Dependency Graph
+              </span>
+              <h3 className="text-base font-bold text-white mt-1.5 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-indigo-400" />
+                Interconnected Engineering Spines
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Every college subject directly reinforces your GATE rank and builds towards your core VLSI Design Verification role.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {PILLAR_DEPENDENCY_DATA.map((spine) => (
+                <div key={spine.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                    <span className="text-xs font-bold text-white">{spine.title}</span>
+                    <span className="text-[10px] font-mono text-slate-400">{spine.nodes.length} Stages</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {spine.nodes.map((node, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-slate-300">
+                        <span className="text-[10px] font-mono text-indigo-400">↳</span>
+                        <span className={node.includes('Sem 2-1') ? 'text-emerald-300 font-semibold' : ''}>
+                          {node}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 font-mono">
+                    <strong className="text-slate-300">Impact: </strong>{spine.feeds_into}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {TRIPLE_OVERLAP_MATRIX.map((item, idx) => (
-              <div key={idx} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span className="text-indigo-400 font-mono text-xs">#{idx + 1}</span>
-                    {item.topic}
-                  </h3>
-                  <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded border self-start sm:self-auto ${
-                    item.overlap_tier === 'TRIPLE_VALUE' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' :
-                    item.overlap_tier === 'GATE_COLLEGE' ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
-                    item.overlap_tier === 'CORE_DV' ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30' :
-                    'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                  }`}>
-                    {item.tier_label}
-                  </span>
-                </div>
+          {/* Triple Overlap Matrix */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="border-b border-slate-800 pb-3">
+              <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
+                Section 2.1: College + GATE + DV High-Value Overlap Matrix
+              </span>
+              <h3 className="text-base font-bold text-white mt-1.5 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                The Anti-Burnout Overlap Engine
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Never treat college and GATE as separate study tasks. Study once, harvest three times.
+              </p>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                  <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
-                    <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">College Semester Sync</div>
-                    <div className="font-semibold text-slate-200">{item.college_course}</div>
+            <div className="grid grid-cols-1 gap-4">
+              {TRIPLE_OVERLAP_MATRIX.map((item, idx) => (
+                <div key={idx} className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span className="text-indigo-400 font-mono text-xs">#{idx + 1}</span>
+                      {item.topic}
+                    </h4>
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded border self-start sm:self-auto ${
+                      item.overlap_tier === 'TRIPLE_VALUE' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' :
+                      item.overlap_tier === 'GATE_COLLEGE' ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
+                      'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                    }`}>
+                      {item.tier_label}
+                    </span>
                   </div>
-                  <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
-                    <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">GATE ECE Return</div>
-                    <div className="font-semibold text-amber-400">{item.gate_relevance} ({item.gate_section})</div>
-                  </div>
-                  <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
-                    <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">VLSI DV Career Value</div>
-                    <div className="font-semibold text-indigo-300">{item.dv_relevance}</div>
-                  </div>
-                </div>
 
-                <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/60 text-xs">
-                  <span className="font-bold text-emerald-400 font-mono">Action Protocol: </span>
-                  <span className="text-slate-300">{item.strategy}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">College Semester Sync</div>
+                      <div className="font-semibold text-slate-200">{item.college_course}</div>
+                    </div>
+                    <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">GATE ECE Return</div>
+                      <div className="font-semibold text-amber-400">{item.gate_relevance} ({item.gate_section})</div>
+                    </div>
+                    <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-[10px] text-slate-400 font-mono uppercase mb-0.5">VLSI DV Career Value</div>
+                      <div className="font-semibold text-indigo-300">{item.dv_relevance}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 text-xs">
+                    <span className="font-bold text-emerald-400 font-mono">Action Protocol: </span>
+                    <span className="text-slate-300">{item.strategy}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* SUBTAB 3: ERROR BOOK (1-3-7-14-30 SPACED REVIEW) */}
+      {/* SUBTAB 4: GATE 2028 BLUEPRINT & CHECKPOINTS */}
+      {activeSubTab === 'blueprint' && (
+        <div className="space-y-6">
+          {/* Blueprint Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-400">Total Paper Structure</span>
+              <div className="text-xl font-bold text-white font-mono mt-1">65 Questions / 100 Marks</div>
+              <span className="text-[10px] text-slate-500 font-mono">3 Hours &bull; Computer Based Test (CBT)</span>
+            </div>
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-400">Technical Core Weightage</span>
+              <div className="text-xl font-bold text-amber-400 font-mono mt-1">72 Core + 13 Math</div>
+              <span className="text-[10px] text-slate-500 font-mono">8 ECE sections + Engineering Math</span>
+            </div>
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-400">3rd Year Eligibility</span>
+              <div className="text-xl font-bold text-emerald-400 font-mono mt-1">Fully Validated</div>
+              <span className="text-[10px] text-slate-500 font-mono">Appear in 3rd year (Feb 2028)</span>
+            </div>
+          </div>
+
+          {/* Mark Distribution Breakdown */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Award className="w-5 h-5 text-amber-400" />
+              Official Mark Distribution
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {GATE_EXAM_SPECIFICATION.mark_distribution.map((dist, idx) => (
+                <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">{dist.section}</span>
+                    <span className="text-xs font-bold text-amber-400 font-mono">{dist.marks} Marks</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono">{dist.questions} Questions</div>
+                  <p className="text-xs text-slate-400 leading-relaxed pt-1">{dist.notes}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Question Types & Negative Marking Rules */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-sky-400" />
+              Question Types &amp; Tactical Scoring Strategies
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {GATE_EXAM_SPECIFICATION.question_types.map((qt, idx) => (
+                <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-white">{qt.type}</div>
+                  <div className="text-[11px] font-mono text-amber-300 bg-slate-900 p-2 rounded border border-slate-800">
+                    {qt.scoring}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">{qt.strategy}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 2028 Strategic Verification Checkpoints */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-indigo-400" />
+              Strategic Verification Checkpoints (Road to 2028)
+            </h3>
+            <div className="space-y-3">
+              {GATE_2028_VERIFICATION_CHECKPOINTS.map((cp, idx) => (
+                <div key={idx} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                        {cp.timeline}
+                      </span>
+                      <span className="text-xs font-bold text-white">{cp.milestone}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">{cp.description}</p>
+                  </div>
+                  <div className="text-xs text-emerald-300 font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 shrink-0">
+                    {cp.action}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 5: ERROR BOOK (1-3-7-14-30 SPACED REVIEW) */}
       {activeSubTab === 'error_book' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -475,91 +633,149 @@ export function GateWarRoom({ state, updateState }) {
                 Review intervals: Day 1 &rarr; Day 3 &rarr; Day 7 &rarr; Day 14 &rarr; Day 30. A mistake reviewed 5 times never recurs in GATE.
               </p>
             </div>
-            <button
-              onClick={() => setShowAddErrorModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-rose-500/20"
-            >
-              <Plus className="w-4 h-4" />
-              Log New Mistake
-            </button>
+            <div className="flex items-center gap-2">
+              {errorBook.length === 0 && (
+                <button
+                  onClick={loadSampleErrors}
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700"
+                >
+                  Load Sample Trap Templates
+                </button>
+              )}
+              <button
+                onClick={() => setShowAddErrorModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-rose-500/20"
+              >
+                <Plus className="w-4 h-4" />
+                Log New Mistake
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {errorBook.map((err) => (
-              <div key={err.id} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
-                      {err.id}
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">{err.subject} • {err.question_ref} ({err.question_type})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">
-                      {err.mistake_category}
-                    </span>
-                    <span className="text-[10px] font-mono text-amber-400">
-                      Review #{err.current_interval_idx + 1} due: {err.next_review_date}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="text-xs font-bold text-white">{err.topic}</div>
-                  <p className="text-xs text-slate-300 leading-relaxed">{err.problem_summary}</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="bg-rose-950/20 border border-rose-500/20 p-2.5 rounded-lg space-y-1">
-                    <div className="text-[10px] font-mono font-bold text-rose-400 uppercase">My Error / Flawed Thinking</div>
-                    <p className="text-slate-300 font-mono text-[11px]">{err.my_wrong_work}</p>
-                    <div className="text-[11px] text-slate-400 pt-1 border-t border-rose-500/10">
-                      <strong>Root Cause:</strong> {err.root_cause}
-                    </div>
-                  </div>
-
-                  <div className="bg-emerald-950/20 border border-emerald-500/20 p-2.5 rounded-lg space-y-1">
-                    <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Authoritative Correction &amp; Rule</div>
-                    <p className="text-slate-300 font-mono text-[11px]">{err.correct_solution}</p>
-                    <div className="text-[11px] text-emerald-300 font-bold pt-1 border-t border-emerald-500/10">
-                      <strong>Golden Rule:</strong> {err.corrective_rule}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Spaced Interval Stepper & Action */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800">
-                  <div className="flex items-center gap-1.5 text-xs font-mono">
-                    <span className="text-slate-500 text-[10px]">Intervals:</span>
-                    {err.spaced_interval_days.map((days, idx) => {
-                      const isPassed = idx < err.current_interval_idx;
-                      const isCurrent = idx === err.current_interval_idx;
-                      return (
-                        <span 
-                          key={days}
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                            isCurrent ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' :
-                            'bg-slate-800 text-slate-500'
-                          }`}
-                        >
-                          +{days}d
-                        </span>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => advanceErrorInterval(err.id)}
-                    className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all self-end sm:self-auto"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Verify &amp; Advance to Next Spaced Interval
-                  </button>
-                </div>
+          {/* Empty State */}
+          {errorBook.length === 0 ? (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                <ShieldCheck className="w-6 h-6 text-emerald-400" />
               </div>
-            ))}
-          </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white">Error Book Clean (Day 0 Slate)</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  You have not logged any mistakes yet. As you solve GATE PYQs, enter tricky traps here to schedule automatic 1, 3, 7, 14, and 30-day reviews.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={loadSampleErrors}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700"
+                >
+                  Load 2 Example Traps
+                </button>
+                <button
+                  onClick={() => setShowAddErrorModal(true)}
+                  className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold"
+                >
+                  Log Your First Mistake
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Category Filter */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                {['all', 'Type 1', 'Type 2', 'Type 3', 'Type 4', 'Type 5'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setErrorCategoryFilter(cat)}
+                    className={`px-3 py-1 rounded-lg font-mono font-medium transition-all ${
+                      errorCategoryFilter === cat 
+                        ? 'bg-rose-500 text-white font-bold' 
+                        : 'bg-slate-900 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    {cat === 'all' ? 'All Errors' : cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {filteredErrors.map((err) => (
+                  <div key={err.id} className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
+                          {err.id}
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">{err.subject} • {err.question_ref} ({err.question_type})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">
+                          {err.mistake_category}
+                        </span>
+                        <span className="text-[10px] font-mono text-amber-400">
+                          Review #{err.current_interval_idx + 1} due: {err.next_review_date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-bold text-white">{err.topic}</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">{err.problem_summary}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="bg-rose-950/20 border border-rose-500/20 p-2.5 rounded-lg space-y-1">
+                        <div className="text-[10px] font-mono font-bold text-rose-400 uppercase">My Error / Flawed Thinking</div>
+                        <p className="text-slate-300 font-mono text-[11px]">{err.my_wrong_work}</p>
+                        <div className="text-[11px] text-slate-400 pt-1 border-t border-rose-500/10">
+                          <strong>Root Cause:</strong> {err.root_cause}
+                        </div>
+                      </div>
+
+                      <div className="bg-emerald-950/20 border border-emerald-500/20 p-2.5 rounded-lg space-y-1">
+                        <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Authoritative Correction &amp; Rule</div>
+                        <p className="text-slate-300 font-mono text-[11px]">{err.correct_solution}</p>
+                        <div className="text-[11px] text-emerald-300 font-bold pt-1 border-t border-emerald-500/10">
+                          <strong>Golden Rule:</strong> {err.corrective_rule}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Spaced Interval Stepper & Action */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800">
+                      <div className="flex items-center gap-1.5 text-xs font-mono">
+                        <span className="text-slate-500 text-[10px]">Intervals:</span>
+                        {err.spaced_interval_days.map((days, idx) => {
+                          const isPassed = idx < err.current_interval_idx;
+                          const isCurrent = idx === err.current_interval_idx;
+                          return (
+                            <span 
+                              key={days}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                isCurrent ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' :
+                                'bg-slate-800 text-slate-500'
+                              }`}
+                            >
+                              +{days}d
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => advanceErrorInterval(err.id)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all self-end sm:self-auto"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Verify &amp; Advance to Next Spaced Interval
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Modal to Log New Mistake */}
           {showAddErrorModal && (
@@ -709,7 +925,7 @@ export function GateWarRoom({ state, updateState }) {
         </div>
       )}
 
-      {/* SUBTAB 4: PYQ & TEST ENGINE */}
+      {/* SUBTAB 6: PYQ & TEST ENGINE */}
       {activeSubTab === 'pyq_system' && (
         <div className="space-y-4">
           <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4">
@@ -750,36 +966,22 @@ export function GateWarRoom({ state, updateState }) {
             </div>
           </div>
 
-          {/* Test Analysis Checklist */}
+          {/* Virtual Calculator Commandments */}
           <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              Post-Mock Diagnostic Protocol
+              <Calculator className="w-4 h-4 text-emerald-400" />
+              Official Virtual Calculator Commandments
             </h3>
             <p className="text-xs text-slate-300">
-              Taking tests without 2 hours of post-test root-cause analysis is a complete waste of time. After every subject or full-length mock, fill this diagnostic sheet:
+              GATE uses an on-screen TCS iON calculator without a physical keypad. Practice these strict habits:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
-              <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
-                <div className="text-slate-500 mb-1">Accuracy Metric</div>
-                <div className="text-white font-bold text-sm">&ge; 85% Target</div>
-                <div className="text-[10px] text-slate-400">High accuracy beats high reckless attempts.</div>
-              </div>
-              <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
-                <div className="text-slate-500 mb-1">Negative Marks Limit</div>
-                <div className="text-rose-400 font-bold text-sm">&le; 4.00 Marks</div>
-                <div className="text-[10px] text-slate-400">Zero wild guessing on 2-mark MCQs.</div>
-              </div>
-              <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
-                <div className="text-slate-500 mb-1">Unattempted Recovery</div>
-                <div className="text-amber-400 font-bold text-sm">Classify All</div>
-                <div className="text-[10px] text-slate-400">Time-shortage vs genuine concept gap.</div>
-              </div>
-              <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800">
-                <div className="text-slate-500 mb-1">Virtual Calc Penalty</div>
-                <div className="text-sky-400 font-bold text-sm">0 Rounding Slips</div>
-                <div className="text-[10px] text-slate-400">Maintain minimum 3 decimal precision.</div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              {GATE_EXAM_SPECIFICATION.virtual_calculator_rules.map((rule, idx) => (
+                <div key={idx} className="p-3 bg-slate-950 rounded-lg border border-slate-800 flex items-start gap-2">
+                  <span className="text-amber-400 font-mono font-bold mt-0.5">{idx + 1}.</span>
+                  <span className="text-slate-300">{rule}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

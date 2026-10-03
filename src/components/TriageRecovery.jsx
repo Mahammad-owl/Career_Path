@@ -43,6 +43,28 @@ export function TriageRecovery({ state, updateState, setActiveTab }) {
 
   const recoveryPlan = calculateRecovery(daysMissed);
 
+  const applyTriageToToday = () => {
+    const triageTask = {
+      id: `t_triage_${Date.now()}`,
+      pillar: "GATE",
+      text: `Backlog Triage: ${recoveryPlan.strategy} (Cover top 15 core PYQs, zero textbook reading)`,
+      duration: 60,
+      done: false,
+      tag: "Recovery"
+    };
+    updateState({
+      ...state,
+      active_mode: "backlog",
+      today: {
+        ...state.today,
+        mode: "backlog",
+        tasks: [triageTask, ...(state.today?.tasks || []).filter(t => !t.id.startsWith('t_triage'))]
+      }
+    });
+    alert(`Applied "${recoveryPlan.strategy}"! Today's mode recalibrated to Backlog Triage.`);
+    setActiveTab('today');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -111,11 +133,21 @@ export function TriageRecovery({ state, updateState, setActiveTab }) {
             </div>
           </div>
 
-          <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/20 text-xs text-slate-300 space-y-1">
-            <span className="font-bold text-indigo-300 font-mono uppercase block text-[11px]">
-              Triage Directive:
-            </span>
-            <p className="leading-relaxed">{recoveryPlan.advice}</p>
+          <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/20 text-xs text-slate-300 space-y-3">
+            <div>
+              <span className="font-bold text-indigo-300 font-mono uppercase block text-[11px] mb-1">
+                Triage Directive:
+              </span>
+              <p className="leading-relaxed">{recoveryPlan.advice}</p>
+            </div>
+
+            <button
+              onClick={applyTriageToToday}
+              className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-500/20"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Apply This Triage Strategy to Today's Operating Plan
+            </button>
           </div>
         </div>
       </div>
